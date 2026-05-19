@@ -100,6 +100,20 @@ async function getAvailableModels() {
   }
 }
 
+async function getStoredContent(chatId, messageId) {
+  try {
+    var messages = await spindle.chat.getMessages(chatId);
+    for (var i = 0; i < messages.length; i++) {
+      if (messages[i].id === messageId) {
+        return messages[i].content;
+      }
+    }
+  } catch (err) {
+    spindle.log.info("auto-image-gen: getStoredContent failed " + (err.message ?? err));
+  }
+  return null;
+}
+
 async function generateOne(prompt, chatId, characterId) {
   var modelVal = SETTINGS.model || undefined;
 
@@ -167,17 +181,23 @@ async function processContent(chatId, messageId, characterId, content) {
     return;
   }
 
-  var currentContent = cleaned;
+  var shortPrompts = [];
+  for (var p = 0; p < prompts.length; p++) {
+    var sp = prompts[p];
+    shortPrompts.push(sp.length > 80 ? sp.slice(0, 80) + "..." : sp);
+  }
 
   for (var k = 0; k < prompts.length; k++) {
     var prompt = prompts[k];
-    spindle.log.info('auto-image-gen: generating "' + prompt.slice(0, 80) + '..."');
+    spindle.log.info('auto-image-gen: generating "' + shortPrompts[k] + '..."');
 
     try {
       var result = await generateOne(prompt, chatId, characterId);
       if (result.imageUrl) {
-        currentContent = currentContent + "\n\n![" + prompt.slice(0, 120) + "](" + result.imageUrl + ")";
-        await spindle.chat.updateMessage(chatId, messageId, { content: currentContent });
+        var storedContent = await getStoredContent(chatId, messageId);
+        if (!storedContent) storedContent = cleaned;
+        var newContent = storedContent + "\n\n![" + shortPrompts[k] + "](" + result.imageUrl + ")";
+        await spindle.chat.updateMessage(chatId, messageId, { content: newContent });
       }
     } catch (err) {
       spindle.log.info("auto-image-gen: gen failed " + (err.message ?? err));
