@@ -1,0 +1,12 @@
+{
+  "version": "1.3.0",
+  "name": "Multi-Image-Gen",
+  "identifier": "multi_image_gen",
+  "author": "User",
+  "github": "https://github.com/user/auto-image-gen",
+  "homepage": "https://github.com/user/auto-image-gen",
+  "description": "Automatically triggers image generation when the AI writes [img: description] in its response.",
+  "permissions": ["image_gen", "chat_mutation", "images"],
+  "entry_backend": "dist/backend.js",
+  "entry_frontend": "dist/frontend.js"
+}
