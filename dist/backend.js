@@ -181,22 +181,16 @@ async function processContent(chatId, messageId, characterId, content) {
     return;
   }
 
-  var shortPrompts = [];
-  for (var p = 0; p < prompts.length; p++) {
-    var sp = prompts[p];
-    shortPrompts.push(sp.length > 80 ? sp.slice(0, 80) + "..." : sp);
-  }
-
   for (var k = 0; k < prompts.length; k++) {
     var prompt = prompts[k];
-    spindle.log.info('auto-image-gen: generating "' + shortPrompts[k] + '..."');
+    spindle.log.info('auto-image-gen: generating "' + prompt.slice(0, 80) + '..."');
 
     try {
       var result = await generateOne(prompt, chatId, characterId);
       if (result.imageUrl) {
         var storedContent = await getStoredContent(chatId, messageId);
         if (!storedContent) storedContent = cleaned;
-        var newContent = storedContent + "\n\n![" + shortPrompts[k] + "](" + result.imageUrl + ")";
+        var newContent = storedContent + "\n\n![](" + result.imageUrl + ")";
         await spindle.chat.updateMessage(chatId, messageId, { content: newContent });
       }
     } catch (err) {
